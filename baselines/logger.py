@@ -257,7 +257,8 @@ class Logger(object):
         for fmt in self.output_formats:
             fmt.writeseq(args)
 
-Logger.DEFAULT = Logger.CURRENT = Logger(dir=None, output_formats=[HumanOutputFormat(sys.stdout)])
+#Logger.DEFAULT = Logger.CURRENT = Logger(dir=None, output_formats=[HumanOutputFormat(sys.stdout)])
+#Logger.DEFAULT = Logger.CURRENT = Logger(dir='/home/caffe/Documents/baselines/log/', output_formats=[HumanOutputFormat(log)])
 
 def configure(dir=None, format_strs=None):
     assert Logger.CURRENT is Logger.DEFAULT,\

@@ -124,8 +124,10 @@ def learn(env, policy_func, *,
     assign_old_eq_new = U.function([],[], updates=[tf.assign(oldv, newv)
         for (oldv, newv) in zipsame(oldpi.get_variables(), pi.get_variables())])
     compute_losses = U.function([ob, ac, atarg, ret, lrmult], losses)
-
+    
+    saver = tf.train.Saver(max_to_keep=None)
     U.initialize()
+    sess = U.get_session()
     adam.sync()
 
     # Prepare for rollouts
@@ -184,7 +186,8 @@ def learn(env, policy_func, *,
                 adam.update(g, optim_stepsize * cur_lrmult) 
                 losses.append(newlosses)
             logger.log(fmt_row(13, np.mean(losses, axis=0)))
-
+        
+        saver.save(sess, 'log/model'+str(iters_so_far))
         logger.log("Evaluating losses...")
         losses = []
         for batch in d.iterate_once(optim_batchsize):

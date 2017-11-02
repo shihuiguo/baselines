@@ -305,7 +305,8 @@ class Logger(object):
             if isinstance(fmt, SeqWriter):
                 fmt.writeseq(map(str, args))
 
-Logger.DEFAULT = Logger.CURRENT = Logger(dir=None, output_formats=[HumanOutputFormat(sys.stdout)])
+#Logger.DEFAULT = Logger.CURRENT = Logger(dir=None, output_formats=[HumanOutputFormat(sys.stdout)])
+#Logger.DEFAULT = Logger.CURRENT = Logger(dir='/home/caffe/Documents/baselines/log/', output_formats=[HumanOutputFormat(log)])
 
 def configure(dir=None, format_strs=None):
     if dir is None:

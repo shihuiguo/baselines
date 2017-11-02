@@ -128,6 +128,7 @@ def learn(env, policy_func, *,
     
     saver = tf.train.Saver(max_to_keep=None)
     U.initialize()
+    sess = U.get_session()
     adam.sync()
     # saver.restore(U.get_session(), 'log/start')
     # Prepare for rollouts

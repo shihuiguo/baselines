@@ -14,22 +14,23 @@ class CnnPolicy(object):
         assert isinstance(ob_space, gym.spaces.Box)
 
         self.pdtype = pdtype = make_pdtype(ac_space)
-        sequence_length = None
+        sequence_length = [1,1,1]
 
-        ob = U.get_placeholder(name="ob", dtype=tf.float32, shape=[sequence_length] + list(ob_space.shape))
+        ob = U.get_placeholder(name="ob", dtype=tf.float32, shape= [None]+list(ob_space.shape)+[1, 1])
     
-        x = ob / 255.0
+        x = ob
         if kind == 'small': # from A3C paper
             x = tf.nn.relu(U.conv2d(x, 16, "l1", [8, 8], [4, 4], pad="VALID"))
             x = tf.nn.relu(U.conv2d(x, 32, "l2", [4, 4], [2, 2], pad="VALID"))
             x = U.flattenallbut0(x)
             x = tf.nn.relu(U.dense(x, 256, 'lin', U.normc_initializer(1.0)))
         elif kind == 'large': # Nature DQN
-            x = tf.nn.relu(U.conv2d(x, 32, "l1", [8, 8], [4, 4], pad="VALID"))
-            x = tf.nn.relu(U.conv2d(x, 64, "l2", [4, 4], [2, 2], pad="VALID"))
-            x = tf.nn.relu(U.conv2d(x, 64, "l3", [3, 3], [1, 1], pad="VALID"))
+            #x = tf.nn.relu(U.conv2d(x, 32, "l1", [8, 8], [4, 4], pad="VALID"))
+            x = tf.nn.relu(U.conv2d(x, 16, "l1", [4, 1], [1, 1], pad="VALID"))
+            x = tf.nn.relu(U.conv2d(x, 32, "l2", [4, 1], [2, 2], pad="VALID"))
+            x = tf.nn.relu(U.conv2d(x, 32, "l3", [3, 1], [1, 1], pad="VALID"))
             x = U.flattenallbut0(x)
-            x = tf.nn.relu(U.dense(x, 512, 'lin', U.normc_initializer(1.0)))
+            x = tf.nn.relu(U.dense(x, 64, 'lin', U.normc_initializer(1.0)))
         else:
             raise NotImplementedError
 
@@ -45,7 +46,7 @@ class CnnPolicy(object):
         self._act = U.function([stochastic, ob], [ac, self.vpred])
 
     def act(self, stochastic, ob):
-        ac1, vpred1 =  self._act(stochastic, ob[None])
+        ac1, vpred1 =  self._act(stochastic, ob[None, :, None,  None])
         return ac1[0], vpred1[0]
     def get_variables(self):
         return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, self.scope)

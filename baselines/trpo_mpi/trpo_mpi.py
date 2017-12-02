@@ -13,6 +13,7 @@ from contextlib import contextmanager
 def traj_segment_generator(pi, env, horizon, stochastic):
     # Initialize state variables
     t = 0
+    scale = 0
     ac = env.action_space.sample()
     new = True
     rew = 0.0
@@ -53,7 +54,8 @@ def traj_segment_generator(pi, env, horizon, stochastic):
         acs[i] = ac
         prevacs[i] = prevac
 
-        ob, rew, new, _ = env.step(ac)
+        ob, rew, new, info = env.step(ac)
+        rew = rew + scale*info['reward_pos']
         rews[i] = rew
 
         cur_ep_ret += rew
@@ -65,6 +67,9 @@ def traj_segment_generator(pi, env, horizon, stochastic):
             cur_ep_len = 0
             ob = env.reset()
         t += 1
+        scale += 0.000001
+        if scale > 1:
+            scale = 1
 
 def add_vtarg_and_adv(seg, gamma, lam):
     new = np.append(seg["new"], 0) # last element is only used for last vtarg, but we already zeroed it if last new = 1
@@ -166,6 +171,7 @@ def learn(env, policy_func, *,
         return out
 
     U.initialize()
+    saver = tf.train.Saver(max_to_keep=None)
     th_init = get_flat()
     MPI.COMM_WORLD.Bcast(th_init, root=0)
     set_from_flat(th_init)
@@ -253,6 +259,9 @@ def learn(env, policy_func, *,
             if nworkers > 1 and iters_so_far % 20 == 0:
                 paramsums = MPI.COMM_WORLD.allgather((thnew.sum(), vfadam.getflat().sum())) # list of tuples
                 assert all(np.allclose(ps, paramsums[0]) for ps in paramsums[1:])
+
+        if iters_so_far % 20 == 0:
+            saver.save(U.get_session(), 'log/model'+str(int(iters_so_far / 20)))
 
         for (lossname, lossval) in zip(loss_names, meanlosses):
             logger.record_tabular(lossname, lossval)

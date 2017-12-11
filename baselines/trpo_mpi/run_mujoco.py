@@ -32,7 +32,7 @@ def train(env_id, num_iters, seed):
     env.seed(workerseed)
     gym.logger.setLevel(logging.WARN)
 
-    trpo_mpi.learn(env, policy_fn, timesteps_per_batch=1024, max_kl=0.01, cg_iters=10, cg_damping=0.1,
+    trpo_mpi.learn(env, policy_fn, timesteps_per_batch=2048, max_kl=0.01, cg_iters=10, cg_damping=0.1,
         max_iters=num_iters, gamma=0.99, lam=0.98, vf_iters=5, vf_stepsize=1e-3)
     env.close()
 

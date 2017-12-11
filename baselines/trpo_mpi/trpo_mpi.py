@@ -42,6 +42,9 @@ def traj_segment_generator(pi, env, horizon, stochastic):
             yield {"ob" : obs, "rew" : rews, "vpred" : vpreds, "new" : news,
                     "ac" : acs, "prevac" : prevacs, "nextvpred": vpred * (1 - new),
                     "ep_rets" : ep_rets, "ep_lens" : ep_lens}
+            scale += 0.000001
+            if scale > 2:
+                scale = 2            
             _, vpred = pi.act(stochastic, ob)            
             # Be careful!!! if you change the downstream algorithm to aggregate
             # several of these batches, then be sure to do a deepcopy
@@ -55,7 +58,7 @@ def traj_segment_generator(pi, env, horizon, stochastic):
         prevacs[i] = prevac
 
         ob, rew, new, info = env.step(ac)
-        rew = rew + scale*info['reward_pos']
+        rew = rew + scale*info['reward_pos'] 
         rews[i] = rew
 
         cur_ep_ret += rew
@@ -67,9 +70,7 @@ def traj_segment_generator(pi, env, horizon, stochastic):
             cur_ep_len = 0
             ob = env.reset()
         t += 1
-        scale += 0.000001
-        if scale > 1:
-            scale = 1
+
 
 def add_vtarg_and_adv(seg, gamma, lam):
     new = np.append(seg["new"], 0) # last element is only used for last vtarg, but we already zeroed it if last new = 1
@@ -199,6 +200,7 @@ def learn(env, policy_func, *,
             break
         elif max_iters and iters_so_far >= max_iters:
             break
+        #saver.restore(U.get_session(), 'log/start')
         logger.log("********** Iteration %i ************"%iters_so_far)
 
         with timed("sampling"):

@@ -42,9 +42,10 @@ def traj_segment_generator(pi, env, horizon, stochastic):
             yield {"ob" : obs, "rew" : rews, "vpred" : vpreds, "new" : news,
                     "ac" : acs, "prevac" : prevacs, "nextvpred": vpred * (1 - new),
                     "ep_rets" : ep_rets, "ep_lens" : ep_lens}
-            scale += 0.000001
-            if scale > 2:
-                scale = 2            
+            scale = 1
+            # scale += 0.000001
+            #if scale > 2:
+            #    scale = 2            
             _, vpred = pi.act(stochastic, ob)            
             # Be careful!!! if you change the downstream algorithm to aggregate
             # several of these batches, then be sure to do a deepcopy

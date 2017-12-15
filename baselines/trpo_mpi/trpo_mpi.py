@@ -174,12 +174,18 @@ def learn(env, policy_func, *,
 
     U.initialize()
     saver = tf.train.Saver(max_to_keep=None)
+    
     th_init = get_flat()
     MPI.COMM_WORLD.Bcast(th_init, root=0)
     set_from_flat(th_init)
     vfadam.sync()
     print("Init param sum", th_init.sum(), flush=True)
-
+    sess = U.get_session()
+    saver.restore(sess, 'log/start')
+    #all_var_list = pi.get_trainable_variables()
+    #vf_var_list = [v for v in all_var_list if v.name.split("/")[1].startswith("vf")]
+    #init_new_vars_op = tf.variables_initializer(vf_var_list)
+    #sess.run(init_new_vars_op)    
     # Prepare for rollouts
     # ----------------------------------------
     seg_gen = traj_segment_generator(pi, env, timesteps_per_batch, stochastic=True)
@@ -201,7 +207,7 @@ def learn(env, policy_func, *,
             break
         elif max_iters and iters_so_far >= max_iters:
             break
-        #saver.restore(U.get_session(), 'log/start')
+        
         logger.log("********** Iteration %i ************"%iters_so_far)
 
         with timed("sampling"):
